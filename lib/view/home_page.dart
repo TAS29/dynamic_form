@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:provider/provider.dart';
-import 'package:weather/constants/constants.dart';
-import 'package:weather/repo/get_weather.dart';
-import 'package:weather/widgets/wearther_card.dart';
-import 'package:weather/widgets/weather_card_list.dart';
+import 'package:weather/models/dynamic_form_model.dart';
+import 'package:weather/repo/get_dynamic_form_data.dart';
+import 'package:weather/repo/post_form_data.dart';
+import 'package:weather/utility/connectivity.dart';
+import 'package:weather/utility/shared_preference.dart';
+import 'package:weather/widgets/form_field.dart';
+import 'package:weather/widgets/submit_button.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -21,58 +24,73 @@ class _HomePageState extends State<HomePage> {
   }
 
   init() async {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
-      await context.read<GetWether>().getWeatherData();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      await context.read<GetDyanamicFormData>().getDyanamicFormDataData().then((val) {
+        context.read<PostDyanamicFormData>().formData = List.filled(context.read<GetDyanamicFormData>().data!.fields.length, {});
+      });
     });
   }
-
-  
 
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.black,
         elevation: 10,
         title: Text(
-          "Today's Weather",
+          "Polaris",
+          style: TextStyle(color: Colors.red), // Netflix red color
         ),
         centerTitle: true,
         actions: [
           IconButton(
-              onPressed: () async {
-                await init();
-              },
-              icon: const Icon(Icons.refresh))
+            onPressed: () async {
+              await init();
+            },
+            icon: const Icon(Icons.refresh, color: Colors.white),
+          )
         ],
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          height: size.height,
-          child: Consumer<GetWether>(builder: (context, state, child) {
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Consumer<GetDyanamicFormData>(
+          builder: (context, state, child) {
             return state.loading
                 ? Container(
-                  child: Center(child: CircularProgressIndicator()))
-                : Column(
-                    children: [
-                      SizedBox(
-                        height: 20,
-                      ),
-                      weatherWidget(size, state),
-                      ListView.builder(
-                          itemCount: 3,
-                          shrinkWrap: true,
-                          itemBuilder: (context, i) {
-                            return weatherWidgetList(size, state,i);
-                          })
-                    ],
+                    height: size.height,
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ListView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      children: [
+                        Form(
+                            child: ListView.builder(
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: state.data!.fields.length,
+                                shrinkWrap: true,
+                                itemBuilder: (context, i) {
+                                  return buildFormField(state.data!.fields[i], context.watch<PostDyanamicFormData>(), i);
+                                })),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        submitButton(),
+                      ],
+                    ),
                   );
-          }),
+          },
         ),
       ),
     );
   }
-
-
 }
+
+
