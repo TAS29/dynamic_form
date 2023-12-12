@@ -1,26 +1,40 @@
+import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
-import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/main.dart';
-import 'package:weather/repo/post_form_data.dart';
 import 'package:weather/utility/shared_preference.dart';
 
-class InternetConnectivity {
-  var isDeviceConnected = false;
+class BackgroundTask {
+  postDyanamicFormDataData() async {
+    try {
+      SharedPreferences sp = await SharedPreferences.getInstance();
+      Dio dio = Dio();
+      Response res = await dio.post("https://chatbot-api.grampower.com/flutter-assignment/push", data: {"data": sp.getString("data")});
+      print(res.toString());
+    } on DioError catch (e) {
+      print(e.toString());
+    }
+  }
 
-  checkConnection() async {
-    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
-      if (result != ConnectivityResult.none) {
-        isDeviceConnected = await InternetConnectionChecker().hasConnection;
-        if (isDeviceConnected) {
-          final shouldCallApi = await LocalStorage().shouldCallApi();
-          if (shouldCallApi) {
-            await navigatorKey.currentContext!.read<PostDyanamicFormData>().postDyanamicFormDataData();
-            LocalStorage().shouldCallApiStatusUpdate(false);
+  startBackgroundTask() async {
+      try {
+        connectivity.onConnectivityChanged.listen((val) async {
+          if (connection != ConnectivityResult.none) {
+            if (await internetChecker.hasConnection) {
+              SharedPreferences sp = await SharedPreferences.getInstance();
+              var shouldCallApi = sp.getBool("should_call_api") ?? false;
+              var data = sp.getString("data");
+              if (shouldCallApi) {
+                await postDyanamicFormDataData();
+                await sp.setBool("should_call_api", false);
+              }
+            }
           }
-        }
+        });
+      } on SocketException catch (_) {
+        print('not connected');
       }
-    });
   }
 }

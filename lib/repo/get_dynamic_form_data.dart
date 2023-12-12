@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:weather/constants/urls.dart';
 import 'package:weather/main.dart';
@@ -23,6 +24,8 @@ class GetDyanamicFormData with ChangeNotifier {
       if (res.statusCode == 200) {
         loading = false;
         data = dynamicFormFromJson(jsonEncode(res.data));
+        Box<DynamicForm> box = await Hive.openBox<DynamicForm>('box');
+        await box.put("form", data!);
         data!.fields.forEach((e) {
           if (e.metaInfo.mandatory == "yes") {
             numberOfMandatoryFields++;
@@ -48,5 +51,11 @@ class GetDyanamicFormData with ChangeNotifier {
       // errorMessage();
       print(e.toString());
     }
+  }
+
+  getDataFromDb(DynamicForm? formData) {
+    data = formData;
+    loading = false;
+    notifyListeners();
   }
 }
