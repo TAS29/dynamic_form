@@ -19,22 +19,25 @@ class BackgroundTask {
   }
 
   startBackgroundTask() async {
-      try {
-        connectivity.onConnectivityChanged.listen((val) async {
-          if (connection != ConnectivityResult.none) {
-            if (await internetChecker.hasConnection) {
-              SharedPreferences sp = await SharedPreferences.getInstance();
-              var shouldCallApi = sp.getBool("should_call_api") ?? false;
-              var data = sp.getString("data");
-              if (shouldCallApi) {
-                await postDyanamicFormDataData();
-                await sp.setBool("should_call_api", false);
-              }
+    try {
+      connectivity.onConnectivityChanged.listen((val) async {
+              print("network change");
+        if (connection != ConnectivityResult.none) {
+          if (await internetChecker.hasConnection) {
+              print("connected");
+            SharedPreferences sp = await SharedPreferences.getInstance();
+            var shouldCallApi = sp.getBool("should_call_api") ?? false;
+            var data = sp.getString("data");
+            if (shouldCallApi) {
+              print("api called");
+              await postDyanamicFormDataData();
+              await sp.setBool("should_call_api", false);
             }
           }
-        });
-      } on SocketException catch (_) {
-        print('not connected');
-      }
+        }
+      });
+    } on SocketException catch (_) {
+      print('not connected');
+    }
   }
 }

@@ -53,6 +53,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       case AppLifecycleState.paused:
         await BackgroundTask().startBackgroundTask();
         break;
+      case AppLifecycleState.inactive:
+        await BackgroundTask().startBackgroundTask();
+        break;
+      case AppLifecycleState.detached:
+        await BackgroundTask().startBackgroundTask();
+        break;
       default:
     }
   }

@@ -35,7 +35,8 @@ void main() async {
   Hive.init(path!.path);
   Hive.registerAdapter(DynamicFormAdapter());
   Hive.registerAdapter(FieldAdapter());
- Hive.registerAdapter(MetaInfoAdapter());
+  Hive.registerAdapter(MetaInfoAdapter());
+  await BackgroundTask().startBackgroundTask();
   var box = await Hive.openBox<DynamicForm>('box');
 
   runApp(MyApp());
